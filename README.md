@@ -107,9 +107,23 @@ The evaluation method is almost identical to `LIBERO`. The only required modific
 - **OpenVLA-OFT_w** shows the performance of [OpenVLA-OFT without wrist observation input](https://huggingface.co/Sylvest/openvla-7b-oft-finetuned-libero-without-wrist).
 - **OpenVLA-OFT_m** shows the performance of [OpenVLA-OFT with a mix-sft](https://huggingface.co/moojink/openvla-7b-oft-finetuned-libero-spatial-object-goal-10).
 
+
 ### Origin LIBERO Benchmark Leaderboard
 
 To make it easier to get all the results in one place, we've compiled the evaluation results of current VLA models on the original LIBERO benchmark in this [table](./libero_res.md).
+
+
+### Research Works Using LIBERO-Plus
+
+The following projects have adopted **LIBERO-Plus** for evaluating their VLA models. We appreciate the community’s support and will continue to maintain and expand the benchmark.
+
+If your project uses LIBERO-Plus, please submit a PR to add your work.
+
+- AVA-VLA: Improving Vision-Language-Action models with Active Visual Attention. (Avg 74.7) [[pdf]](https://arxiv.org/pdf/2511.18960)
+- MergeVLA: Cross-Skill Model Merging Toward a Generalist Vision-Language-Action Agent. (Avg 72.2) [[pdf]](https://arxiv.org/pdf/2511.18810)
+- SRPO: Self-Referential Policy Optimization for Vision-Language-Action Models. (Avg 82.1) [[pdf]](https://arxiv.org/pdf/2511.15605) [[github]](https://github.com/sii-research/siiRL) [[hf-model]](https://huggingface.co/collections/Sylvest/srpo) 
+
+🌱 ***More works are being added…***
 
 
 ## Citation
