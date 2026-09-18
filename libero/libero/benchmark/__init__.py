@@ -43,33 +43,54 @@ class Task(NamedTuple):
     init_states_file: str
 
 
+_LANGUAGE_CACHE = {}
+
+
+def bddl_file_for_task_name(suite_name, x):
+    """Return the BDDL file a task name loads, or None if it has none on disk.
+
+    Perturbed tasks are named "<task>_<perturbation>_<parameters>". Camera
+    viewpoints ("<task>_view_<params>_initstate_<id>[_noise_<n>]") ship no BDDL of
+    their own: OffScreenRenderEnv strips the suffix and loads the task's own file.
+    The other perturbations (_language_, _table_, _tb_, _light_, _add_, _level) each
+    ship a BDDL file that carries the instruction for the perturbed task.
+    """
+    candidate = x.split("_view_")[0] + ".bddl" if "_view_" in x else x
+    bddl_file_path = os.path.join(get_libero_path("bddl_files"), suite_name, candidate)
+    return bddl_file_path if os.path.exists(bddl_file_path) else None
+
+
 def grab_language_from_filename(suite_name, x):
-    if "_language_" not in x:
-        if x[0].isupper():  # LIBERO-100
-            if "SCENE10" in x:
-                language = " ".join(x[x.find("SCENE") + 8 :].split("_"))
-            else:
-                language = " ".join(x[x.find("SCENE") + 7 :].split("_"))
+    # (:language ...) is the instruction the task actually specifies, and the same
+    # string the environment reports as env.language_instruction. Splitting the
+    # filename instead appends perturbation metadata to the prompt, e.g.
+    # "... place it on the plate view 0 0 100 0 0 initstate 1".
+    bddl_file_path = bddl_file_for_task_name(suite_name, x)
+    if bddl_file_path is not None:
+        if bddl_file_path not in _LANGUAGE_CACHE:
+            try:
+                _LANGUAGE_CACHE[bddl_file_path] = BDDLUtils.get_problem_info(
+                    bddl_file_path
+                )["language_instruction"]
+            except Exception as e:  # pragma: no cover - defensive
+                # A BDDL that cannot be parsed falls back to the filename rather
+                # than taking the whole benchmark down with it; the language is
+                # read for every task now, not only the _language_ ones.
+                print(f"[warning] Could not read language from {bddl_file_path}: {e}")
+                _LANGUAGE_CACHE[bddl_file_path] = None
+        if _LANGUAGE_CACHE[bddl_file_path] is not None:
+            return _LANGUAGE_CACHE[bddl_file_path]
+
+    # Fall back to the filename for task names without a BDDL file on disk.
+    if x[0].isupper():  # LIBERO-100
+        if "SCENE10" in x:
+            language = " ".join(x[x.find("SCENE") + 8 :].split("_"))
         else:
-            language = " ".join(x.split("_"))
-        en = language.find(".bddl")
-        return language[:en]
+            language = " ".join(x[x.find("SCENE") + 7 :].split("_"))
     else:
-        if "_view_" in x:
-            bddl_file_path = os.path.join(
-                get_libero_path("bddl_files"),
-                suite_name,
-                x.split("_view_")[0]+'.bddl',
-            )
-        else:
-            bddl_file_path = os.path.join(
-                get_libero_path("bddl_files"),
-                suite_name,
-                x,
-            )
-        # print("bddl_file_path:", bddl_file_path)
-        problem_info = BDDLUtils.get_problem_info(bddl_file_path)
-        return problem_info["language_instruction"]
+        language = " ".join(x.split("_"))
+    en = language.find(".bddl")
+    return language[:en]
 
 
 libero_suites = [
