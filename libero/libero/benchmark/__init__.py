@@ -68,8 +68,18 @@ def grab_language_from_filename(suite_name, x):
     bddl_file_path = bddl_file_for_task_name(suite_name, x)
     if bddl_file_path is not None:
         if bddl_file_path not in _LANGUAGE_CACHE:
-            _LANGUAGE_CACHE[bddl_file_path] = BDDLUtils.get_problem_info(bddl_file_path)["language_instruction"]
-        return _LANGUAGE_CACHE[bddl_file_path]
+            try:
+                _LANGUAGE_CACHE[bddl_file_path] = BDDLUtils.get_problem_info(
+                    bddl_file_path
+                )["language_instruction"]
+            except Exception as e:  # pragma: no cover - defensive
+                # A BDDL that cannot be parsed falls back to the filename rather
+                # than taking the whole benchmark down with it; the language is
+                # read for every task now, not only the _language_ ones.
+                print(f"[warning] Could not read language from {bddl_file_path}: {e}")
+                _LANGUAGE_CACHE[bddl_file_path] = None
+        if _LANGUAGE_CACHE[bddl_file_path] is not None:
+            return _LANGUAGE_CACHE[bddl_file_path]
 
     # Fall back to the filename for task names without a BDDL file on disk.
     if x[0].isupper():  # LIBERO-100
