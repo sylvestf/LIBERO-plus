@@ -129,6 +129,8 @@ If your project uses LIBERO-Plus, please submit a PR to add your work.
 
 
 ## Citation
+For controlled physics studies, see [optional per-object density overrides](docs/object_density_overrides.md).
+
 If you find this work useful for your research, please cite our paper:
 ```bibtex
 @article{fei25libero-plus,
