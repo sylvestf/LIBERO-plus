@@ -103,10 +103,11 @@ task_num = [2402, 2518, 2591, 2519, 90]
 task_order_dict = dict()
 
 for idx in range(5):
+    task_order_rng = random.Random(f"libero-plus-task-order:{suite_order[idx]}")
     task_orders = [list(range(0,task_num[idx]))]
     for _ in range(19):
         order = list(range(0,task_num[idx]))
-        random.shuffle(order)
+        task_order_rng.shuffle(order)
         task_orders.append(order)
     task_order_dict[suite_order[idx]] = task_orders
 
