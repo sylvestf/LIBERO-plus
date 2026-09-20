@@ -1,6 +1,6 @@
 (define (problem LIBERO_Tabletop_Manipulation)
   (:domain robosuite)
-  (:language Here are 20 variations of the instruction pick up the black bowl on the ramekin and place it on the plate)
+  (:language Pick up the black bowl on the ramekin and place it on the plate)
     (:regions
       (plate_region
           (:target main_table)
