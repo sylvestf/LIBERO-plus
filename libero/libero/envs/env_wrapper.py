@@ -6,6 +6,7 @@ import matplotlib.cm as cm
 from robosuite.utils.errors import RandomizationError
 
 import libero.libero.envs.bddl_utils as BDDLUtils
+import libero.libero.envs.noise_kernels as noise_kernels
 from libero.libero.envs import *
 
 import time
@@ -89,8 +90,12 @@ def zoom_blur(x, severity=1):
 
     x = (np.array(x) / 255.).astype(np.float32)
     out = np.zeros_like(x)
-    for zoom_factor in c:
-        out += clipped_zoom(x, zoom_factor)
+    if noise_kernels.NUMBA_AVAILABLE and x.shape[0] == x.shape[1]:
+        # numba version of the loop below (square images, as clipped_zoom assumes)
+        out = noise_kernels.zoom_sum(x, c, out)
+    else:
+        for zoom_factor in c:
+            out += clipped_zoom(x, zoom_factor)
 
     x = (x + out) / (len(c) + 1)
     return np.clip(x, 0, 1) * 255
@@ -163,13 +168,17 @@ def glass_blur(x, severity=1):
     height_x, weight_x = x.shape[0], x.shape[1]
 
     # locally shuffle pixels
-    for i in range(c[2]):
-        for h in range(height_x - c[1], c[1], -1):
-            for w in range(weight_x - c[1], c[1], -1):
-                dx, dy = np.random.randint(-c[1], c[1], size=(2,))
-                h_prime, w_prime = h + dy, w + dx
-                # swap
-                x[h, w], x[h_prime, w_prime] = x[h_prime, w_prime], x[h, w]
+    if noise_kernels.NUMBA_AVAILABLE and x.ndim == 3:
+        # numba version of the loop below (H x W x C images)
+        x = noise_kernels.shuffle_pixels(x, c[1], c[2])
+    else:
+        for i in range(c[2]):
+            for h in range(height_x - c[1], c[1], -1):
+                for w in range(weight_x - c[1], c[1], -1):
+                    dx, dy = np.random.randint(-c[1], c[1], size=(2,))
+                    h_prime, w_prime = h + dy, w + dx
+                    # swap
+                    x[h, w], x[h_prime, w_prime] = x[h_prime, w_prime], x[h, w]
 
     return np.clip(gaussian(x / 255., sigma=c[0], channel_axis=-1), 0, 1) * 255
 
